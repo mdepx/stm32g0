@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2023 Ruslan Bukin <br@bsdpad.com>
+ * Copyright (c) 2021 Ruslan Bukin <br@bsdpad.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,54 +24,46 @@
  * SUCH DAMAGE.
  */
 
-MEMORY
+#include <sys/cdefs.h>
+#include <sys/console.h>
+#include <sys/systm.h>
+#include <sys/malloc.h>
+#include <sys/thread.h>
+#include <sys/smp.h>
+
+#include <machine/cpufunc.h>
+#include <machine/cpuregs.h>
+#include <machine/scs.h>
+
+#include <dev/intc/intc.h>
+#include <dev/uart/uart.h>
+
+#include <arm/arm/nvic.h>
+
+void
+udelay(uint32_t usec)
 {
-	flash (rx) : ORIGIN = 0x08000000, LENGTH = 64K
-	sram (rwx) : ORIGIN = 0x20000000, LENGTH = 8K
+	int i;
+
+	/* TODO: implement me */
+
+	for (i = 0; i < usec * 100; i++)
+		;
 }
 
-ENTRY(__start)
-SECTIONS
+#if 0
+void
+usleep(uint32_t usec)
 {
-	. = 0x08000000;
-	.start . : {
-		*start.o(.text)
-	} > flash
 
-	.text : {
-		*(.text)
-	} > flash
+	mdx_usleep(usec);
+}
+#endif
 
-	.rodata : {
-		*(.rodata)
-	} > flash
+void
+board_init(void)
+{
 
-	.ARM.exidx : {
-		*(.ARM.exidx)
-	} > flash
-
-	.rodata.str1.1 : {
-		*(.rodata.str1.1)
-	} > flash
-
-	/* Ensure _smem is associated with the next section */
-	. = .;
-	_smem = ABSOLUTE(.);
-	.data : {
-		_sdata = ABSOLUTE(.);
-		*(.data)
-		_edata = ABSOLUTE(.);
-	} > sram AT > flash
-
-	.bss : {
-		_sbss = ABSOLUTE(.);
-		*(.bss COMMON)
-		*(.sbss)
-		_ebss = ABSOLUTE(.);
-	} > sram
-
-	. = ALIGN(8);
-	. = . + 0x1000; /* 4kB of stack memory */
-	stack_top = .;
-	_emem = ABSOLUTE(.);
+	malloc_init();
+	malloc_add_region((void *)0x20020000, 0x20000);
 }
