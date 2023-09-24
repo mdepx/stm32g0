@@ -7,7 +7,8 @@ int
 main(void)
 {
 
-	printf("%s: hello world\n", __func__);
+	while (1)
+		printf("%s: hello world\n", __func__);
 
 	return (0);
 }

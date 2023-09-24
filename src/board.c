@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2021 Ruslan Bukin <br@bsdpad.com>
+ * Copyright (c) 2023 Ruslan Bukin <br@bsdpad.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,12 @@
 #include <dev/intc/intc.h>
 #include <dev/uart/uart.h>
 
+#include <arm/stm/stm32g0.h>
 #include <arm/arm/nvic.h>
+
+struct stm32g0_rcc_softc rcc_sc;
+struct stm32l4_usart_softc usart_sc;
+struct stm32f4_gpio_softc gpio_sc;
 
 void
 udelay(uint32_t usec)
@@ -60,10 +65,48 @@ usleep(uint32_t usec)
 }
 #endif
 
+static void
+uart_putchar(int c, void *arg)
+{
+	struct stm32l4_usart_softc *sc;
+
+	sc = arg;
+
+	if (c == '\n')
+		stm32l4_usart_putc(sc, '\r');
+
+	stm32l4_usart_putc(sc, c);
+}
+
+static const struct gpio_pin uart_pins[] = {
+	{ PORT_A, 2, MODE_ALT, 1, FLOAT }, /* USART2_TX */
+	{ PORT_A, 3, MODE_ALT, 1, FLOAT }, /* USART2_RX */
+	{ PORT_B, 6, MODE_ALT, 0, FLOAT }, /* USART1_TX */
+	{ PORT_B, 7, MODE_ALT, 0, FLOAT }, /* USART1_RX */
+	{ -1, -1, -1, -1, -1 }
+};
+
 void
 board_init(void)
 {
+	struct rcc_config cfg;
 
+	cfg.ahbenr = 0;
+	cfg.apbenr1 = APBENR1_PWREN | APBENR1_RTCAPBEN | APBENR1_USART2EN;
+	cfg.apbenr2 = APBENR2_USART1EN;
+	cfg.iopenr = IOPENR_GPIOAEN | IOPENR_GPIOBEN;
+
+	stm32g0_rcc_init(&rcc_sc, RCC_BASE);
+	stm32g0_rcc_setup(&rcc_sc, &cfg);
+
+	stm32f4_gpio_init(&gpio_sc, GPIO_BASE);
+	pin_configure(&gpio_sc, uart_pins);
+
+	stm32l4_usart_init(&usart_sc, USART2_BASE, 16000000, 115200);
+	mdx_console_register(uart_putchar, (void *)&usart_sc);
+
+#if 0
 	malloc_init();
 	malloc_add_region((void *)0x20020000, 0x20000);
+#endif
 }
