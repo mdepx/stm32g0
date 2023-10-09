@@ -44,6 +44,10 @@
 struct stm32g0_rcc_softc rcc_sc;
 struct stm32l4_usart_softc usart_sc;
 struct stm32f4_gpio_softc gpio_sc;
+struct stm32f4_timer_softc timer_sc;
+
+struct arm_nvic_softc nvic_sc;
+struct mdx_device dev_nvic = { .sc = &nvic_sc };
 
 void
 udelay(uint32_t usec)
@@ -93,7 +97,7 @@ board_init(void)
 
 	cfg.ahbenr = 0;
 	cfg.apbenr1 = APBENR1_PWREN | APBENR1_RTCAPBEN | APBENR1_USART2EN;
-	cfg.apbenr2 = APBENR2_USART1EN;
+	cfg.apbenr2 = APBENR2_USART1EN | APBENR2_TIM1EN;
 	cfg.iopenr = IOPENR_GPIOAEN | IOPENR_GPIOBEN;
 
 	stm32g0_rcc_init(&rcc_sc, RCC_BASE);
@@ -104,6 +108,11 @@ board_init(void)
 
 	stm32l4_usart_init(&usart_sc, USART2_BASE, 16000000, 115200);
 	mdx_console_register(uart_putchar, (void *)&usart_sc);
+
+	stm32f4_timer_init(&timer_sc, TIM1_BASE, 16000000);
+	arm_nvic_init(&dev_nvic, NVIC_BASE);
+	mdx_intc_setup(&dev_nvic, 14, stm32f4_timer_intr, &timer_sc);
+	mdx_intc_enable(&dev_nvic, 14);
 
 #if 0
 	malloc_init();

@@ -7,8 +7,10 @@ int
 main(void)
 {
 
-	while (1)
+	while (1) {
 		printf("%s: hello world\n", __func__);
+		mdx_usleep(1000000);
+	}
 
 	return (0);
 }
