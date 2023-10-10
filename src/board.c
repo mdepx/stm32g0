@@ -85,6 +85,7 @@ uart_putchar(int c, void *arg)
 static const struct gpio_pin uart_pins[] = {
 	{ PORT_A, 2, MODE_ALT, 1, FLOAT }, /* USART2_TX */
 	{ PORT_A, 3, MODE_ALT, 1, FLOAT }, /* USART2_RX */
+	{ PORT_B, 0, MODE_OUT, 0, FLOAT }, /* VCC_3v3 */
 	{ PORT_B, 6, MODE_ALT, 0, FLOAT }, /* USART1_TX */
 	{ PORT_B, 7, MODE_ALT, 0, FLOAT }, /* USART1_RX */
 	{ -1, -1, -1, -1, -1 }
