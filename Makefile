@@ -16,4 +16,7 @@ all:
 clean:
 	@rm -rf obj/*
 
+flash:
+	sudo openocd -f interface/stlink.cfg -f target/stm32g0x.cfg -c 'reset_config srst_only connect_assert_srst; program obj/${APP}.bin reset 0x08000000 exit'
+
 include ${OSDIR}/mk/user.mk
